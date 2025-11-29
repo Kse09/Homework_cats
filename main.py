@@ -1,20 +1,23 @@
 import requests
 import json
 import time
+import urllib.parse
 
 text_for_image = input("Введите текст для картинки: ").strip()
 yandex_token = input("Введите яндекс-токен: ").strip()
 group_name = "FPY-140"
-image_url = f"https://cataas.com/cat/says/{text_for_image}"
-filename = text_for_image
+encoded_text_url = urllib.parse.quote(text_for_image)
+encoded_filename = text_for_image.replace(' ', '_') 
+image_url = f"https://cataas.com/cat/says/{encoded_text_url}"
+filename = encoded_filename
 
-# папка
+# Создание папки на Яндекс диске
 headers = {'Authorization': yandex_token}
 params = {'path': group_name}
 response = requests.put('https://cloud-api.yandex.net/v1/disk/resources',
                         params=params, headers=headers)
 
-# файл в папку
+# Загружаем картинку с котиком на Яндекс диск
 params = {
     'url': image_url,
     'path': f'{group_name}/{filename}.jpg'
@@ -26,11 +29,11 @@ response = requests.post('https://cloud-api.yandex.net/v1/disk/resources/upload'
 if response.status_code == 202:
     print("✅ Картинка успешно загружается на Яндекс диск!")
     
-    # Ждем 5 секунд, чтобы картинка успела загрузиться
+# Ждем 5 секунд, чтобы картинка успела загрузиться
     print("⏳ Ожидаем завершения загрузки...")
     time.sleep(5)
 
-# информация о картинке
+# Получаем метаинформацию о картинке на диске
     params = {
         'path': f'{group_name}/{filename}.jpg',
         'fields': 'name,path,size,created,modified,' 
@@ -44,13 +47,13 @@ if response.status_code == 202:
         print(f"📁 Имя файла: {file_info.get('name')}")
         print(f"📐 Размер файла: {file_info.get('size', 'неизвестно')} байт")
 
-# запись в json
+# Записываем информацию в json файл
         json_filename = f"{filename}_info.json"
         file_info = response.json()
         with open(json_filename, 'w', encoding='utf-8') as json_file:
             json.dump(file_info, json_file, ensure_ascii=False, indent=2)
         print(f"💾 Метаинформация сохранена в файл: {json_filename}")
-
+# Отправляем json файл на диск
         params = {
             'path': f'{group_name}/{json_filename}',
             'overwrite': 'true'
