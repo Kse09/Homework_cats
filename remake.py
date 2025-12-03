@@ -3,6 +3,10 @@ import json
 import time
 import urllib.parse
 
+def encode_text(text):
+    encoded_text_url = urllib.parse.quote(text)
+    encoded_filename = text.replace(' ', '_')
+    return encoded_text_url, encoded_filename
 
 def create_yandex_disk_folder(token, folder_name):
     headers = {'Authorization': token}
@@ -49,10 +53,9 @@ def save_file_info_to_json(file_info, filename):
 
 def main():
     text_for_image = input("Введите текст для картинки: ").strip()
-    filename = text_for_image.replace(' ', '_')
     yandex_token = input("Введите яндекс-токен: ").strip()
     group_name = "FPY-140"
-    encoded_text_url = urllib.parse.quote(text_for_image)
+    encoded_text_url, filename = encode_text(text_for_image)
     image_url = f"https://cataas.com/cat/says/{encoded_text_url}"
     folder_creation = create_yandex_disk_folder(yandex_token, group_name)
     load_picture = load_image_to_disk(yandex_token, image_url, group_name, filename)
